@@ -20,10 +20,15 @@ type s struct {
 }
 
 type p struct {
-	Name string `json:"name" export:"一级姓名|二级姓名|姓名,1"`
-	Age  int32  `json:"age" export:"年龄,4"`
-	Time string `json:"time" export:"时间,7" headStyle:"{\"font\":{\"bold\":true,\"italic\":true,\"family\":\"Berlin Sans FB Demi\",\"size\":36,\"color\":\"#777777\"}}"`
-	List []s
+	Name   string `json:"name" export:"一级姓名|二级姓名|姓名,1"`
+	Age    int32  `json:"age" export:"年龄,4"`
+	Time   string `json:"time" export:"时间,7" headStyle:"{\"font\":{\"bold\":true,\"italic\":true,\"family\":\"Berlin Sans FB Demi\",\"size\":36,\"color\":\"#777777\"}}"`
+	List   []s
+	Export *sut `json:"export" export:"结构体,10"`
+}
+type sut struct {
+	A int32  `json:"a"`
+	B string `json:"b"`
 }
 
 func TestListToExcel(t *testing.T) {
@@ -31,6 +36,10 @@ func TestListToExcel(t *testing.T) {
 		Name: "天外飞仙",
 		Age:  18,
 		Time: "我是时间",
+		Export: &sut{
+			A: 1,
+			B: "我是结构体",
+		},
 		List: []s{
 			{
 				Name: "大名",

@@ -1,6 +1,7 @@
 package goexcel
 
 import (
+	"encoding/json"
 	"errors"
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"reflect"
@@ -128,7 +129,6 @@ func ListToExcelSheet1Base(list interface{}, rowStyle func(row int) (style strin
 			}
 			startNowRow = row
 		}
-		xlsx.SetCellValue(tableName, startCode, value)
 		endCode := cellCode + strconv.Itoa(endRow-1)
 		if endRow-row != 1 {
 			xlsx.MergeCell(tableName, startCode, endCode)
@@ -147,7 +147,10 @@ func ListToExcelSheet1Base(list interface{}, rowStyle func(row int) (style strin
 				}
 				xlsx.SetCellStyle(tableName, startCode, endCode, style)
 			}
+		} else {
+			value = defaultCalValue(export.allFields[cell-1].kind, value)
 		}
+		xlsx.SetCellValue(tableName, startCode, value)
 		return nil
 	}
 	n := arr.Len()
@@ -206,4 +209,13 @@ func getSliceBaseType(list interface{}) (base reflect.Type, err error) {
 		return nil, errors.New("list 必须是Slice")
 	}
 	return t.Elem(), nil
+}
+
+func defaultCalValue(kind reflect.Kind, value interface{}) interface{} {
+	switch kind {
+	case reflect.Slice, reflect.Struct, reflect.Ptr:
+		b, _ := json.Marshal(value)
+		return string(b)
+	}
+	return value
 }

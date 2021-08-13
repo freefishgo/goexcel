@@ -12,6 +12,7 @@ type fieldInfo struct {
 	headStyle string
 	cellStyle string
 	headInfo  []string
+	kind      reflect.Kind
 	sort      int
 	index     int
 }
@@ -48,10 +49,11 @@ func getExportSort(src reflect.Type) *modelInfo {
 				for tp.Kind() == reflect.Ptr {
 					tp = tp.Elem()
 				}
-				if tf.Type.Kind() == reflect.Slice {
+				column, ok := tf.Tag.Lookup("export")
+				if tp.Kind() == reflect.Slice && !ok {
 					tmpField.Level = new(newFieldInfo)
 					tmpField.LevelIndex = n
-					tp := tf.Type.Elem()
+					tp = tp.Elem()
 					for tp.Kind() == reflect.Ptr {
 						tp = tp.Elem()
 					}
@@ -62,11 +64,7 @@ func getExportSort(src reflect.Type) *modelInfo {
 					}
 					tmpField = tmpField.Level
 				}
-				//如果字段值是time类型之外的struct，递归取址
-				if tf.Type.Kind() == reflect.Struct {
-					continue
-				}
-				if column, ok := tf.Tag.Lookup("export"); ok {
+				if ok {
 					if column == "" {
 						column = strings.Split(tf.Tag.Get("json"), ",")[0]
 						if column == "" {
@@ -84,6 +82,7 @@ func getExportSort(src reflect.Type) *modelInfo {
 						name:      name,
 						sort:      sort,
 						index:     n,
+						kind:      tf.Type.Kind(),
 						headStyle: tf.Tag.Get("headStyle"),
 						cellStyle: tf.Tag.Get("cellStyle"),
 					}
