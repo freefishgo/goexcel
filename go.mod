@@ -1,4 +1,4 @@
-module goexcel
+module github.com/freefishgo/goexcel
 
 go 1.15
 
