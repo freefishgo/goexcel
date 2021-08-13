@@ -138,7 +138,6 @@ func getModelValueForFieldInfo(dest reflect.Value, field *newFieldInfo, f func(r
 				if err != nil {
 					return err
 				}
-				endRows = field.Level.StartRows
 			} else {
 				err = f(field.Level.StartRows, field.Level.Fields[0].sort, field.Level.StartRows+1, value)
 				field.Level.StartRows++
