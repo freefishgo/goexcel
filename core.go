@@ -19,22 +19,32 @@ type fieldInfo struct {
 
 type modelInfo struct {
 	headMaxLevel int
+	CellFlags    map[string]bool
 	field        *newFieldInfo
 	allFields    []*fieldInfo
 }
 
+func (m *modelInfo) IsCellFlags(axis string) (ok bool, cell string, row int) {
+	cell, row = AxisToCellRow(axis)
+	ok = m.CellFlags[cell]
+	return
+}
+
 type newFieldInfo struct {
 	Fields        []*fieldInfo
+	CellFlag      string
 	StartRows     int
 	LevelIndex    int
 	LevelIsStruct bool
+	LevelType     reflect.Type
 	Level         *newFieldInfo
 }
 
-func getExportSort(src reflect.Type) *modelInfo {
+func getExportSort(src reflect.Type, isRestSort bool) *modelInfo {
 	var list []*fieldInfo
-	startSort := 1000
+	startSort := 50
 	model := new(modelInfo)
+	model.CellFlags = map[string]bool{}
 	var f func(reflect.Type, *newFieldInfo)
 	f = func(dest reflect.Type, field *newFieldInfo) {
 		for dest.Kind() == reflect.Ptr {
@@ -54,6 +64,7 @@ func getExportSort(src reflect.Type) *modelInfo {
 					tmpField.Level = new(newFieldInfo)
 					tmpField.LevelIndex = n
 					tp = tp.Elem()
+					tmpField.LevelType = tp
 					for tp.Kind() == reflect.Ptr {
 						tp = tp.Elem()
 					}
@@ -97,6 +108,10 @@ func getExportSort(src reflect.Type) *modelInfo {
 					}
 					list = append(list, info)
 					tmpField.Fields = append(tmpField.Fields, info)
+					if len(tmpField.Fields) == 1 {
+						tmpField.CellFlag = GetCellCode(info.sort)
+						model.CellFlags[tmpField.CellFlag] = true
+					}
 				}
 			}
 		}
@@ -111,8 +126,10 @@ func getExportSort(src reflect.Type) *modelInfo {
 		}
 		return list[i].sort < list[j].sort
 	})
-	for k, v := range list {
-		v.sort = k + 1
+	if isRestSort {
+		for k, v := range list {
+			v.sort = k + 1
+		}
 	}
 	model.allFields = list
 	return model

@@ -22,6 +22,19 @@ func GetCellCode(columnNumber int) string {
 	return string(ans)
 }
 
+// AxisToCellRow Axis转换成列号和行号
+func AxisToCellRow(axis string) (cell string, row int) {
+	end := 1
+	for ; end < len(axis); end++ {
+		if axis[end] >= '0' || axis[end] <= '9' {
+			break
+		}
+	}
+	cell = axis[:end]
+	row, _ = strconv.Atoi(axis[end:])
+	return
+}
+
 // ListToExcelSheet1 通过list数据来生成数据格式 通过结构体 tag export:"一级姓名|姓名1,2"
 //
 // 生成表头和数据格式 通过,来分割表头名和列位置  表头名通过 |来判断层级
@@ -41,7 +54,7 @@ func ListToExcelSheet1Base(list interface{}, rowStyle func(row int) (style strin
 	if err != nil {
 		return nil, err
 	}
-	export := getExportSort(base)
+	export := getExportSort(base, true)
 	if len(export.allFields) == 0 {
 		return nil, errors.New("结构体没有导出的字段")
 	}
