@@ -3,6 +3,7 @@ package goexcel_test
 import (
 	"fmt"
 	"github.com/freefishgo/goexcel"
+	"reflect"
 	"time"
 )
 
@@ -319,4 +320,71 @@ func ExampleListToExcelSheet1BaseToBytes() {
 		return style, value
 	}
 	goexcel.ListToExcelSheet1BaseToBytes(list, rows, cell)
+}
+
+func ExampleNewExcelSheet1ToListFromPath() {
+	type s1 struct {
+		Name string `json:"name" export:"一级姓名|姓名2,3"`
+		Age  int32  `json:"age" export:"年龄2,6"`
+		Time string `json:"time" export:"时间2,9"`
+	}
+
+	type s struct {
+		Name string `json:"name" export:"一级姓名|姓名1,2" headStyle:"{\"fill\":{\"type\":\"pattern\",\"color\":[\"#E0EBF5\"],\"pattern\":1}}"`
+		Age  int32  `json:"age" export:"年龄1,5" cellStyle:"{\"fill\":{\"type\":\"gradient\",\"color\":[\"#FFFFFF\",\"#E0EBF5\"],\"shading\":1}}"`
+		Time string `json:"time" export:"时间1,8"`
+		List []s1
+	}
+	type sut struct {
+		A int32  `json:"a"`
+		B string `json:"b"`
+	}
+	type p struct {
+		Name   string `json:"name" export:"一级姓名|二级姓名|姓名,1"`
+		Age    int32  `json:"age" export:"年龄,4"`
+		Time   string `json:"time" export:"时间,7" headStyle:"{\"font\":{\"bold\":true,\"italic\":true,\"family\":\"Berlin Sans FB Demi\",\"size\":36,\"color\":\"#777777\"}}"`
+		List   []s
+		Export *sut `json:"export" export:"结构体,10"`
+	}
+	e, err := goexcel.NewExcelSheet1ToListFromPath("20210814182854.xlsx", reflect.TypeOf(&p{}))
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	for e.Next() {
+		data := e.GetRow()
+		d := data.(*p)
+		fmt.Println(fmt.Sprintf("%+v", d))
+	}
+}
+
+func ExampleExcelSheet1ToListFromPath() {
+	type s1 struct {
+		Name string `json:"name" export:"一级姓名|姓名2,3"`
+		Age  int32  `json:"age" export:"年龄2,6"`
+		Time string `json:"time" export:"时间2,9"`
+	}
+
+	type s struct {
+		Name string `json:"name" export:"一级姓名|姓名1,2" headStyle:"{\"fill\":{\"type\":\"pattern\",\"color\":[\"#E0EBF5\"],\"pattern\":1}}"`
+		Age  int32  `json:"age" export:"年龄1,5" cellStyle:"{\"fill\":{\"type\":\"gradient\",\"color\":[\"#FFFFFF\",\"#E0EBF5\"],\"shading\":1}}"`
+		Time string `json:"time" export:"时间1,8"`
+		List []s1
+	}
+	type sut struct {
+		A int32  `json:"a"`
+		B string `json:"b"`
+	}
+	type p struct {
+		Name   string `json:"name" export:"一级姓名|二级姓名|姓名,1"`
+		Age    int32  `json:"age" export:"年龄,4"`
+		Time   string `json:"time" export:"时间,7" headStyle:"{\"font\":{\"bold\":true,\"italic\":true,\"family\":\"Berlin Sans FB Demi\",\"size\":36,\"color\":\"#777777\"}}"`
+		List   []s
+		Export *sut `json:"export" export:"结构体,10"`
+	}
+	var list []*p
+	goexcel.ExcelSheet1ToListFromPath("20210814182854.xlsx", &list)
+	fmt.Println(len(list))
+	for _, d := range list {
+		fmt.Println(fmt.Sprintf("%+v", d))
+	}
 }
