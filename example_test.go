@@ -3,7 +3,6 @@ package goexcel_test
 import (
 	"fmt"
 	"github.com/freefishgo/goexcel"
-	"reflect"
 	"time"
 )
 
@@ -346,7 +345,7 @@ func ExampleNewExcelSheet1ToListFromPath() {
 		List   []s
 		Export *sut `json:"export" export:"结构体,10"`
 	}
-	e, err := goexcel.NewExcelSheet1ToListFromPath("20210814182854.xlsx", reflect.TypeOf(&p{}))
+	e, err := goexcel.NewExcelSheet1ToListFromPath("20210814182854.xlsx", &p{})
 	if err != nil {
 		fmt.Println(err.Error())
 	}

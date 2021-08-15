@@ -103,10 +103,11 @@ func getBaseValue(value reflect.Value) reflect.Value {
 	return value
 }
 
-func NewExcelSheet1ToList(excel *excelize.File, model reflect.Type) (e *excelToList, err error) {
+func NewExcelSheet1ToList(excel *excelize.File, model interface{}) (e *excelToList, err error) {
+	tp := reflect.TypeOf(model)
 	e = new(excelToList)
 	e.mergeCellsMap = map[int]map[string]int{}
-	err = e.setBaseModel(model)
+	err = e.setBaseModel(tp)
 	e.setExport(excel)
 	return
 }
@@ -114,7 +115,7 @@ func NewExcelSheet1ToList(excel *excelize.File, model reflect.Type) (e *excelToL
 // NewExcelSheet1ToListFromPath path路径excel文件数据转换成 e 结构数据 切片元素export数据必须与
 //
 // excel中表头和结构一致
-func NewExcelSheet1ToListFromPath(path string, model reflect.Type) (e *excelToList, err error) {
+func NewExcelSheet1ToListFromPath(path string, model interface{}) (e *excelToList, err error) {
 	f, err := excelize.OpenFile(path)
 	if err != nil {
 		return
@@ -141,7 +142,7 @@ func ExcelSheet1ToList(excel *excelize.File, listPtr interface{}) (err error) {
 	if err != nil {
 		return err
 	}
-	ex, err := NewExcelSheet1ToList(excel, base)
+	ex, err := NewExcelSheet1ToList(excel, reflect.New(base).Elem().Interface())
 	if err != nil {
 		return err
 	}
