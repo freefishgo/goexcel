@@ -7,6 +7,9 @@ import (
 )
 
 func stringSetValue(des reflect.Value, val string) {
+	if val == "" {
+		return
+	}
 	des = getBaseValue(des)
 	switch des.Type().Kind() {
 	case reflect.String:
