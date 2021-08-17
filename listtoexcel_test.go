@@ -31,6 +31,10 @@ type sut struct {
 	B string `json:"b"`
 }
 
+func TestAxisToCellRow(t *testing.T) {
+	fmt.Println(AxisToCellRow("A12"))
+}
+
 func TestListToExcel(t *testing.T) {
 	v := &p{
 		Name: "天外飞仙",

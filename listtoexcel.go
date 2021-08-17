@@ -26,7 +26,7 @@ func GetCellCode(columnNumber int) string {
 func AxisToCellRow(axis string) (cell string, row int) {
 	end := 1
 	for ; end < len(axis); end++ {
-		if axis[end] >= '0' || axis[end] <= '9' {
+		if axis[end] >= '0' && axis[end] <= '9' {
 			break
 		}
 	}
