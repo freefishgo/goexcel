@@ -1,7 +1,8 @@
-package goexcel
+package goexcel_test
 
 import (
 	"fmt"
+	"github.com/freefishgo/goexcel"
 	"testing"
 	"time"
 )
@@ -32,7 +33,7 @@ type sut struct {
 }
 
 func TestAxisToCellRow(t *testing.T) {
-	fmt.Println(AxisToCellRow("A12"))
+	fmt.Println(goexcel.AxisToCellRow("A12"))
 }
 
 func TestListToExcel(t *testing.T) {
@@ -97,7 +98,8 @@ func TestListToExcel(t *testing.T) {
 			},
 		},
 	}, v, v, v, v, v, v, v, v, v, v)
-	xlsx, err := ListToExcelSheet1(list)
+	xlsx, err := goexcel.ListToExcelSheet1(list)
+	fmt.Println(xlsx.SetAllHeadStyle(`{"font":{"bold":true,"italic":true,"family":"Berlin Sans FB Demi","size":36,"color":"#777777"}}`))
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -175,7 +177,7 @@ func TestListToExcelSheet1Base(t *testing.T) {
 		}
 		return style, value
 	}
-	xlsx, err := ListToExcelSheet1Base(list, rows, cell)
+	xlsx, err := goexcel.ListToExcelSheet1Base(list, rows, cell)
 	if err != nil {
 		fmt.Println(err.Error())
 		return

@@ -39,8 +39,8 @@ func AxisToCellRow(axis string) (cell string, row int) {
 //
 // 生成表头和数据格式 通过,来分割表头名和列位置  表头名通过 |来判断层级
 //
-// 数据级转换成 excelize.File
-func ListToExcelSheet1(list interface{}) (*excelize.File, error) {
+// 数据级转换成 File
+func ListToExcelSheet1(list interface{}) (*File, error) {
 	return ListToExcelSheet1Base(list, nil, nil)
 }
 
@@ -49,7 +49,7 @@ func ListToExcelSheet1(list interface{}) (*excelize.File, error) {
 // 生成表头和数据格式 通过,来分割表头名和列位置  表头名通过 |来判断层级
 //
 // rowStyle 对list行处理 cellDo 单元格处理
-func ListToExcelSheet1Base(list interface{}, rowStyle func(row int) (style string), cellDo func(cell int, value interface{}) (style string, newValue interface{})) (*excelize.File, error) {
+func ListToExcelSheet1Base(list interface{}, rowStyle func(row int) (style string), cellDo func(cell int, value interface{}) (style string, newValue interface{})) (*File, error) {
 	base, err := getSliceBaseType(list)
 	if err != nil {
 		return nil, err
@@ -59,8 +59,12 @@ func ListToExcelSheet1Base(list interface{}, rowStyle func(row int) (style strin
 		return nil, errors.New("结构体没有导出的字段")
 	}
 	arr := reflect.ValueOf(list)
-	xlsx := excelize.NewFile()
+	xlsx := &File{
+		File:      excelize.NewFile(),
+		modelInfo: export,
+	}
 	tableName := "Sheet1"
+	xlsx.sheetName = tableName
 	hashStyle := map[string]int{}
 	cellMap := make([]string, len(export.allFields)+2)
 	cellStyleList := make([]int, len(export.allFields)+1)
@@ -231,4 +235,27 @@ func defaultCalValue(kind reflect.Kind, value interface{}) interface{} {
 		return string(b)
 	}
 	return value
+}
+
+// File 继承 excelize.File
+type File struct {
+	*modelInfo
+	*excelize.File
+	sheetName string
+}
+
+// GetColumnNumber 获取 excel的列数
+func (f *File) GetColumnNumber() int {
+	return len(f.allFields)
+}
+
+// SetAllHeadStyle 设置所有列头一个样式
+func (f *File) SetAllHeadStyle(style string) (styleId int, err error) {
+	styleId, err = f.NewStyle(style)
+	if err != nil {
+		return
+	}
+	row := strconv.Itoa(f.headMaxLevel)
+	f.SetCellStyle(f.sheetName, "A1", GetCellCode(f.GetColumnNumber())+row, styleId)
+	return
 }
