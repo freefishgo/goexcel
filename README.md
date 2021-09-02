@@ -166,15 +166,6 @@ func main() {
     <td class="xl65" >我是小名名时间2</td>
     <td class="xl65"></td>
    </tr>
-   <!--[if supportMisalignedColumns]-->
-    <tr width="0" style="display:none;">
-     <td width="57" style="width:57px;"></td>
-     <td width="59" style="width:59px;"></td>
-     <td width="82" style="width:82px;"></td>
-     <td width="117" style="width:117px;"></td>
-     <td width="143" style="width:143px;"></td>
-    </tr>
-   <!--[endif]-->
   </tbody></table>
 
 ``` go
