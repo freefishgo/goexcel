@@ -14,22 +14,17 @@ type s1 struct {
 }
 
 type s struct {
-	Name string `json:"name" export:"一级姓名|姓名1,2" headStyle:"{\"fill\":{\"type\":\"pattern\",\"color\":[\"#E0EBF5\"],\"pattern\":1}}"`
-	Age  int32  `json:"age" export:"年龄1,5" cellStyle:"{\"fill\":{\"type\":\"gradient\",\"color\":[\"#FFFFFF\",\"#E0EBF5\"],\"shading\":1}}"`
+	Name string `json:"name" export:"一级姓名|姓名1,2"`
+	Age  int32  `json:"age" export:"年龄1,5"`
 	Time string `json:"time" export:"时间1,8"`
 	List []s1
 }
 
 type p struct {
-	Name   string `json:"name" export:"一级姓名|二级姓名|姓名,1"`
-	Age    int32  `json:"age" export:"年龄,4"`
-	Time   string `json:"time" export:"时间,7" headStyle:"{\"font\":{\"bold\":true,\"italic\":true,\"family\":\"Berlin Sans FB Demi\",\"size\":36,\"color\":\"#777777\"}}"`
-	List   []s
-	Export *sut `json:"export" export:"结构体,10"`
-}
-type sut struct {
-	A int32  `json:"a"`
-	B string `json:"b"`
+	Name string `json:"name" export:"一级姓名|二级姓名|姓名,1"`
+	Age  int32  `json:"age" export:"年龄,4"`
+	Time string `json:"time" export:"时间,7"`
+	List []s
 }
 
 func TestAxisToCellRow(t *testing.T) {
@@ -41,10 +36,6 @@ func TestListToExcel(t *testing.T) {
 		Name: "天外飞仙",
 		Age:  18,
 		Time: "我是时间",
-		Export: &sut{
-			A: 1,
-			B: "我是结构体",
-		},
 		List: []s{
 			{
 				Name: "大名",
@@ -64,7 +55,7 @@ func TestListToExcel(t *testing.T) {
 			},
 		},
 	}
-	list := append([]*p(nil), &p{
+	v2 := &p{
 		Name: "天外飞仙",
 		Age:  16,
 		Time: "我是开始时间",
@@ -97,9 +88,9 @@ func TestListToExcel(t *testing.T) {
 				Time: "我是小名名时间2",
 			},
 		},
-	}, v, v, v, v, v, v, v, v, v, v)
+	}
+	list := append([]*p(nil), v, v2)
 	xlsx, err := goexcel.ListToExcelSheet1(list)
-	fmt.Println(xlsx.SetAllHeadStyle(`{"font":{"bold":true,"italic":true,"family":"Berlin Sans FB Demi","size":36,"color":"#777777"}}`))
 	if err != nil {
 		fmt.Println(err.Error())
 		return
