@@ -3,22 +3,22 @@ excel
 
 ``` go
 type s1 struct {
-	Name string `json:"name" export:"一级姓名|姓名2,3"`
-	Age  int32  `json:"age" export:"年龄2,6"`
-	Time string `json:"time" export:"时间2,9"`
+	Name string `export:"一级姓名|姓名2,3"`
+	Age  int32  `export:"年龄2,6"`
+	Time string `export:"时间2,9"`
 }
 
 type s struct {
-	Name string `json:"name" export:"一级姓名|姓名1,2"`
-	Age  int32  `json:"age" export:"年龄1,5"`
-	Time string `json:"time" export:"时间1,8"`
+	Name string `export:"一级姓名|姓名1,2"`
+	Age  int32  `export:"年龄1,5"`
+	Time string `export:"时间1,8"`
 	List []s1
 }
 
 type p struct {
-	Name   string `json:"name" export:"一级姓名|二级姓名|姓名,1"`
-	Age    int32  `json:"age" export:"年龄,4"`
-	Time   string `json:"time" export:"时间,7"`
+	Name   string `export:"一级姓名|二级姓名|姓名,1"`
+	Age    int32  `export:"年龄,4"`
+	Time   string `export:"时间,7"`
 	List   []s
 }
 func main() {
