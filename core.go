@@ -22,6 +22,7 @@ type modelInfo struct {
 	CellFlags    map[string]bool
 	field        *newFieldInfo
 	allFields    []*fieldInfo
+	dataType     int //0:切片 1:ExportMapper
 }
 
 func (m *modelInfo) IsCellFlags(axis string) (ok bool, cell string, row int) {
@@ -38,6 +39,7 @@ type newFieldInfo struct {
 	LevelIsStruct bool
 	LevelType     reflect.Type
 	Level         *newFieldInfo
+	CustomTag     int //0 切片 1:ExportMapper
 }
 
 func getExportSort(src reflect.Type, isRestSort bool) *modelInfo {
@@ -64,6 +66,29 @@ func getExportSort(src reflect.Type, isRestSort bool) *modelInfo {
 					tmpField.Level = new(newFieldInfo)
 					tmpField.LevelIndex = n
 					tp = tp.Elem()
+					tmpField.LevelType = tp
+					for tp.Kind() == reflect.Ptr {
+						tp = tp.Elem()
+					}
+					if tp.Kind() == reflect.Struct {
+						tmpField.LevelIsStruct = true
+						f(tp, tmpField.Level)
+						continue
+					}
+					tmpField = tmpField.Level
+				}
+				if tp.Kind() == reflect.Struct && !ok {
+					sType, ok := tp.FieldByName("data")
+					if !ok {
+						continue
+					}
+					if sType.Type.Kind() != reflect.Map {
+						continue
+					}
+					tmpField.Level = new(newFieldInfo)
+					tmpField.CustomTag = 1
+					tmpField.LevelIndex = n
+					tp = sType.Type.Elem()
 					tmpField.LevelType = tp
 					for tp.Kind() == reflect.Ptr {
 						tp = tp.Elem()
@@ -144,22 +169,44 @@ func getModelValueForFieldInfo(dest reflect.Value, field *newFieldInfo, f func(r
 	if field.Level != nil {
 		field.Level.StartRows = field.StartRows
 		list := dest.Field(field.LevelIndex)
-		n := list.Len()
-		for i := 0; i < n; i++ {
-			value := list.Index(i)
-			for value.Kind() == reflect.Ptr {
-				value = value.Elem()
-			}
-			if field.LevelIsStruct {
-				err = getModelValueForFieldInfo(value, field.Level, f)
-				if err != nil {
-					return err
+		if field.CustomTag == 0 {
+			n := list.Len()
+			for i := 0; i < n; i++ {
+				value := list.Index(i)
+				for value.Kind() == reflect.Ptr {
+					value = value.Elem()
 				}
-			} else {
-				err = f(field.Level.StartRows, field.Level.Fields[0].sort, field.Level.StartRows+1, value)
-				field.Level.StartRows++
-				if err != nil {
-					return err
+				if field.LevelIsStruct {
+					err = getModelValueForFieldInfo(value, field.Level, f)
+					if err != nil {
+						return err
+					}
+				} else {
+					err = f(field.Level.StartRows, field.Level.Fields[0].sort, field.Level.StartRows+1, value)
+					field.Level.StartRows++
+					if err != nil {
+						return err
+					}
+				}
+			}
+		} else if field.CustomTag == 1 {
+			mapper := list.Interface().(ExportMapper).MapSortIterInterface()
+			for mapper.Next() {
+				value := mapper.InterValue()
+				for value.Kind() == reflect.Ptr {
+					value = value.Elem()
+				}
+				if field.LevelIsStruct {
+					err = getModelValueForFieldInfo(value, field.Level, f)
+					if err != nil {
+						return err
+					}
+				} else {
+					err = f(field.Level.StartRows, field.Level.Fields[0].sort, field.Level.StartRows+1, value)
+					field.Level.StartRows++
+					if err != nil {
+						return err
+					}
 				}
 			}
 		}
