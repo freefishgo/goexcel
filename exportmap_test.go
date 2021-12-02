@@ -30,7 +30,7 @@ func TestNewExportMap(t *testing.T) {
 	})
 	v.Map.SetValue("map3", &s{
 		Age:  9989,
-		Name: "s名9",
+		Name: "s名99",
 	})
 	e.SetValue("KEY1", v)
 	e.SetValue("KEY2", v)

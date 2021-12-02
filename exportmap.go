@@ -73,7 +73,8 @@ func (export *ExportMap[T1, T2]) MapKeys() []T1 {
 
 func (export *ExportMap[T1, T2]) MapSortIter() *mapIter[T1, T2] {
 	return &mapIter[T1, T2]{
-		m: export,
+		m:         export,
+		iterIndex: -1,
 	}
 }
 
@@ -82,10 +83,7 @@ func (export *ExportMap[T1, T2]) Len() int {
 }
 
 func (export *ExportMap[T1, T2]) MapSortIterInterface() InterIter {
-	return &mapIter[T1, T2]{
-		m:         export,
-		iterIndex: -1,
-	}
+	return export.MapSortIter()
 }
 
 func NewExportMap[T1 comparable, T2 any]() *ExportMap[T1, T2] {
