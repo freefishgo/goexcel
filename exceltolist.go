@@ -16,6 +16,7 @@ type excelToList struct {
 	rows          [][]string
 	mergeCellsMap map[int]map[string]int
 	startRow      int
+	notSpace      bool //是否不清除空格
 }
 
 // setBaseModel 设置基本表结构
@@ -68,7 +69,11 @@ func (e *excelToList) formatting(field *newFieldInfo, startRow int, value reflec
 	for _, v := range field.Fields {
 		row := e.rows[startRow]
 		if len(row) >= v.sort {
-			stringSetValue(value.Field(v.index), row[v.sort-1])
+			val := row[v.sort-1]
+			if !e.notSpace {
+				val = strings.TrimSpace(val)
+			}
+			stringSetValue(value.Field(v.index), val)
 		}
 	}
 	endRow = startRow

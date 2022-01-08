@@ -4,11 +4,9 @@ import (
 	"encoding/json"
 	"reflect"
 	"strconv"
-	"strings"
 )
 
 func stringSetValue(des reflect.Value, val string) {
-	val = strings.TrimSpace(val)
 	if val == "" {
 		return
 	}
