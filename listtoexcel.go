@@ -41,16 +41,16 @@ func AxisToCellRow(axis string) (cell string, row int) {
 //
 // 数据级转换成 File
 func ListToExcelSheet1(list interface{}) (*File, error) {
-	return ListToExcelSheet1Base(list, nil)
+	return ListToExcelSheet1Base(list, nil, nil)
 }
 
 // ListToExcelSheet1Base 通过list数据来生成数据格式 通过结构体 tag export:"一级姓名|姓名1,2"
 //
 // 生成表头和数据格式 通过,来分割表头名和列位置  表头名通过 |来判断层级
 //
-// rowCellStyle 对list行列单元格处理
-func ListToExcelSheet1Base(list interface{}, rowCellStyle func(startRow, endRow, cell int, value interface{}) (style string, newValue interface{})) (*File, error) {
-	dataType, base, err := getSliceBaseType(list)
+// rowStyle 对list行处理 cellDo 单元格处理
+func ListToExcelSheet1Base(list interface{}, rowStyle func(row int) (style string), cellDo func(cell int, value interface{}) (style string, newValue interface{})) (*File, error) {
+	base, err := getSliceBaseType(list)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +58,7 @@ func ListToExcelSheet1Base(list interface{}, rowCellStyle func(startRow, endRow,
 	if len(export.allFields) == 0 {
 		return nil, errors.New("结构体没有导出的字段")
 	}
-	export.dataType = dataType
+	arr := reflect.ValueOf(list)
 	xlsx := &File{
 		File:      excelize.NewFile(),
 		modelInfo: export,
@@ -123,18 +123,36 @@ func ListToExcelSheet1Base(list interface{}, rowCellStyle func(startRow, endRow,
 		}
 	}
 	export.field.StartRows = export.headMaxLevel + 1
+	startNowRow := 0
+	fieldLen := len(export.allFields)
 	f := func(row, cell, endRow int, value interface{}) error {
 		cellCode := cellMap[cell]
 		rowCode := strconv.Itoa(row)
 		startCode := cellCode + rowCode
 		style := cellStyleList[cell]
+		if row > startNowRow {
+			if rowStyle != nil {
+				styleStr := rowStyle(row)
+				if styleStr != "" {
+					if _, ok := hashStyle[styleStr]; !ok {
+						hashStyle[styleStr], err = xlsx.NewStyle(styleStr)
+						if err != nil {
+							return err
+						}
+					}
+					xlsx.SetCellStyle(tableName, cellMap[1]+strconv.Itoa(row),
+						cellMap[fieldLen]+strconv.Itoa(row), hashStyle[styleStr])
+				}
+			}
+			startNowRow = row
+		}
 		endCode := cellCode + strconv.Itoa(endRow-1)
 		if endRow-row != 1 {
 			xlsx.MergeCell(tableName, startCode, endCode)
 		}
-		if rowCellStyle != nil {
+		if cellDo != nil {
 			styleStr := ""
-			styleStr, value = rowCellStyle(row, endRow, cell, value)
+			styleStr, value = cellDo(cell, value)
 			if styleStr != "" {
 				style = hashStyle[styleStr]
 				if style == 0 {
@@ -152,23 +170,14 @@ func ListToExcelSheet1Base(list interface{}, rowCellStyle func(startRow, endRow,
 		xlsx.SetCellValue(tableName, startCode, value)
 		return nil
 	}
-	if export.dataType == 0 {
-		arr := reflect.ValueOf(list)
-		n := arr.Len()
-		for rowIndex := 0; rowIndex < n; rowIndex++ {
-			if err = getModelValueForFieldInfo(arr.Index(rowIndex), export.field, f); err != nil {
-				return nil, err
-			}
-		}
-	} else if export.dataType == 1 {
-		mapper := list.(ExportMapper).MapSortIterInterface()
-		for mapper.Next() {
-			if err = getModelValueForFieldInfo(mapper.InterValue(), export.field, f); err != nil {
-				return nil, err
-			}
+	n := arr.Len()
+	rowIndex := 0
+	for ; rowIndex < n; rowIndex++ {
+		if err := getModelValueForFieldInfo(arr.Index(rowIndex), export.field, f); err != nil {
+			return nil, err
 		}
 	}
-	if !haveStyle && rowCellStyle == nil {
+	if !haveStyle && rowStyle == nil && cellDo == nil {
 		style, err := xlsx.NewStyle(`{"alignment":{"horizontal":"center","vertical":"center"}}`)
 		if err == nil {
 			xlsx.SetCellStyle(tableName, cellMap[1]+strconv.Itoa(1), cellMap[len(export.allFields)]+strconv.Itoa(export.field.StartRows-1), style)
@@ -182,8 +191,8 @@ func ListToExcelSheet1Base(list interface{}, rowCellStyle func(startRow, endRow,
 // 生成表头和数据格式 通过,来分割表头名和列位置  表头名通过 |来判断层级
 //
 // rowStyle 对list行处理 cellDo 单元格处理
-func ListToExcelSheet1BaseToBytes(list interface{}, rowCellStyle func(startRow, endRow, cell int, value interface{}) (style string, newValue interface{})) ([]byte, error) {
-	excel, err := ListToExcelSheet1Base(list, rowCellStyle)
+func ListToExcelSheet1BaseToBytes(list interface{}, rowStyle func(row int) (style string), cellDo func(cell int, value interface{}) (style string, newValue interface{})) ([]byte, error) {
+	excel, err := ListToExcelSheet1Base(list, rowStyle, cellDo)
 	if err != nil {
 		return nil, err
 	}
@@ -211,30 +220,12 @@ func ListToExcelSheet1ToBytes(list interface{}) ([]byte, error) {
 	return bf.Bytes(), nil
 }
 
-// getSliceBaseType 0:切片 1:ExportMapper
-func getSliceBaseType(list interface{}) (dataType int, base reflect.Type, err error) {
+func getSliceBaseType(list interface{}) (base reflect.Type, err error) {
 	t := reflect.TypeOf(list)
-	_, ok := list.(ExportMapper)
-	if !(t.Kind() == reflect.Slice || ok) {
-		return 0, nil, errors.New("list 必须是Slice或者实现接口 FindMapSortIter")
+	if t.Kind() != reflect.Slice {
+		return nil, errors.New("list 必须是Slice")
 	}
-	if ok {
-		for t.Kind() == reflect.Ptr {
-			t = t.Elem()
-		}
-		if t.Kind() != reflect.Struct {
-			return 1, t, errors.New("必须使用框架提供的 ExportMap ")
-		}
-		if sType, ok := t.FieldByName("data"); !ok {
-			return 1, t, errors.New("必须使用框架提供的 ExportMap ")
-		} else {
-			if sType.Type.Kind() != reflect.Map {
-				return 1, t, errors.New("必须使用框架提供的 ExportMap ")
-			}
-			return 1, sType.Type.Elem(), nil
-		}
-	}
-	return 0, t.Elem(), nil
+	return t.Elem(), nil
 }
 
 func defaultCalValue(kind reflect.Kind, value interface{}) interface{} {

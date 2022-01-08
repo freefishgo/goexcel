@@ -209,19 +209,19 @@ func ExampleListToExcelSheet1Base() {
 			},
 		},
 	}, v, v, v, v, v, v, v, v, v, v)
-	//rows := func(row int) (style string) {
-	//	if row%2 == 0 {
-	//		return `{"fill":{"type":"pattern","color":["RED"],"pattern":1}}`
-	//	}
-	//	return ""
-	//}
-	//cell := func(cell int, value interface{}) (style string, newValue interface{}) {
-	//	if cell == 9 {
-	//		return `{"fill":{"type":"pattern","color":["RED"],"pattern":1}}`, value
-	//	}
-	//	return style, value
-	//}
-	xlsx, err := goexcel.ListToExcelSheet1Base(list, nil)
+	rows := func(row int) (style string) {
+		if row%2 == 0 {
+			return `{"fill":{"type":"pattern","color":["RED"],"pattern":1}}`
+		}
+		return ""
+	}
+	cell := func(cell int, value interface{}) (style string, newValue interface{}) {
+		if cell == 9 {
+			return `{"fill":{"type":"pattern","color":["RED"],"pattern":1}}`, value
+		}
+		return style, value
+	}
+	xlsx, err := goexcel.ListToExcelSheet1Base(list, rows, cell)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -306,19 +306,19 @@ func ExampleListToExcelSheet1BaseToBytes() {
 			},
 		},
 	}, v, v, v, v, v, v, v, v, v, v)
-	//rows := func(row int) (style string) {
-	//	if row%2 == 0 {
-	//		return `{"fill":{"type":"pattern","color":["RED"],"pattern":1}}`
-	//	}
-	//	return ""
-	//}
-	//cell := func(cell int, value interface{}) (style string, newValue interface{}) {
-	//	if cell == 9 {
-	//		return `{"fill":{"type":"pattern","color":["RED"],"pattern":1}}`, value
-	//	}
-	//	return style, value
-	//}
-	goexcel.ListToExcelSheet1BaseToBytes(list, nil)
+	rows := func(row int) (style string) {
+		if row%2 == 0 {
+			return `{"fill":{"type":"pattern","color":["RED"],"pattern":1}}`
+		}
+		return ""
+	}
+	cell := func(cell int, value interface{}) (style string, newValue interface{}) {
+		if cell == 9 {
+			return `{"fill":{"type":"pattern","color":["RED"],"pattern":1}}`, value
+		}
+		return style, value
+	}
+	goexcel.ListToExcelSheet1BaseToBytes(list, rows, cell)
 }
 
 func ExampleNewExcelSheet1ToListFromPath() {
