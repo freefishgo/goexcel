@@ -55,7 +55,7 @@ func getExportSort(src reflect.Type, isRestSort bool) *modelInfo {
 			for n := 0; n < dest.NumField(); n++ {
 				tmpField := field
 				tf := dest.Field(n)
-				if !tf.IsExported() {
+				if tf.Name[0] >= 'a' {
 					continue
 				}
 				tp := tf.Type
