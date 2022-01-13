@@ -183,6 +183,7 @@ func ListToExcelSheet1Base(list interface{}, rowStyle func(row int) (style strin
 			xlsx.SetCellStyle(tableName, cellMap[1]+strconv.Itoa(1), cellMap[len(export.allFields)]+strconv.Itoa(export.field.StartRows-1), style)
 		}
 	}
+	xlsx.AddTable(xlsx.sheetName, "A"+strconv.Itoa(export.headMaxLevel), cellMap[len(export.allFields)]+strconv.Itoa(export.field.StartRows-1), "")
 	return xlsx, err
 }
 
